@@ -43,3 +43,26 @@ array_to_string(array_agg(DISTINCT trim(newhnd)), '::') AS alladd
 FROM agghousenum
 GROUP BY bin 
 );
+
+UPDATE dcp_pad
+SET alladd = REPLACE(alladd,'(','')
+WHERE bin::text IN
+(SELECT bin::text FROM building_composite
+WHERE lottype='3' OR lottype = '4' OR (lottype='1' AND lotarea::double precision >= 10000) OR (numbldgs > 3 AND numfloors >= 8 AND lotarea::double precision >= 10000)
+)
+AND alladd LIKE '%(%)%';
+
+UPDATE dcp_pad
+SET alladd = REPLACE(alladd,')','')
+WHERE bin::text IN
+(SELECT bin::text FROM building_composite
+WHERE lottype='3' OR lottype = '4' OR (lottype='1' AND lotarea::double precision >= 10000) OR (numbldgs > 3 AND numfloors >= 8 AND lotarea::double precision >= 10000)
+)
+AND alladd LIKE '%)%';
+
+
+
+
+COPY(
+SELECT * FROM dcp_pad WHERE bin <> '1000000'
+  )TO '/prod/db-pad/output/dcp_pad_flat.csv' DELIMITER ',' CSV HEADER;
